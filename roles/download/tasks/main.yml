@@ -1,0 +1,34 @@
+---
+- name: Ensure destination directory exists
+  ansible.builtin.file:
+    path: "{{ artifacts_dest }}"
+    state: directory
+    owner: "{{ artifacts_owner }}"
+    group: "{{ artifacts_group }}"
+    mode: "{{ artifacts_mode }}"
+
+- name: Copy RKE2 artifacts to node
+  ansible.builtin.copy:
+    src: "{{ artifacts_src }}/"
+    dest: "{{ artifacts_dest }}/"
+    owner: "{{ artifacts_owner }}"
+    group: "{{ artifacts_group }}"
+    mode: "{{ artifacts_mode }}"
+    recurse: yes
+#----------------------------------------
+- name: Ensure images directory exists
+  ansible.builtin.file:
+    path: "{{ images_dest_dir }}"
+    state: directory
+    owner: "{{ images_owner }}"
+    group: "{{ images_group }}"
+    mode: "{{ images_mode_dir }}"
+
+- name: Copy all image tarballs to node
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ images_dest_dir }}/{{ item | basename }}"
+    owner: "{{ images_owner }}"
+    group: "{{ images_group }}"
+    mode: "{{ images_mode_file }}"
+  loop: "{{ images_src_list }}"

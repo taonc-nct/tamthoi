@@ -1,0 +1,93 @@
+- name: Ensure RKE2 config directory exists
+  file:
+    path: /etc/rancher/rke2
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy RKE2 bootstrap config for first master
+  template:
+    src: rke2-bootstrap-config.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when: inventory_hostname == (groups['master'] | default([]))[0]
+
+- name: Deploy RKE2 HA master config
+  template:
+    src: rke2-ha-master-config.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - "'master' in group_names"
+    - inventory_hostname != (groups['master'] | default([]))[0]
+
+- name: Deploy RKE2 agent config
+  template:
+    src: rke2-agent-config.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when: inventory_hostname in groups['worker']
+
+- name: Deploy RKE2 HA master config
+  template:
+    src: rke2-config.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - "'master' in group_names"
+    - inventory_hostname != (groups['master'] | default([]))[0]
+    - rke2_bootstrap_status is defined
+    - rke2_bootstrap_status.state == "started"
+
+- name: Enable and start RKE2 server on bootstrap master
+  systemd:
+    name: rke2-server
+    enabled: yes
+    state: started
+  when: inventory_hostname == (groups['master'] | default([]))[0]
+
+- name: Ensure RKE2 server is running and enabled on bootstrap master
+  systemd:
+    name: rke2-server
+    state: started
+    enabled: yes
+  when: inventory_hostname == (groups['master'] | default([]))[0]
+
+#--------------------------JOIN master------------------------------
+
+- name: Enable and start RKE2 server on HA master
+  systemd:
+    name: rke2-server
+    enabled: yes
+    state: started
+  when: inventory_hostname != groups['master'][0]
+
+- name: Ensure RKE2 server is running and enabled 
+  systemd:
+    name: rke2-server
+    state: started
+    enabled: yes
+  when: inventory_hostname != groups['master'][0]
+#--------------------------JOIN worker-------------------------------
+- name: Enable and start RKE2 agent
+  systemd:
+    name: rke2-agent
+    state: started
+    enabled: yes
+  when: inventory_hostname in groups['worker']
+
+- name: Ensure RKE2 agent is running and enabled 
+  systemd:
+    name: rke2-agent
+    state: started
+    enabled: yes
+  when: inventory_hostname in groups['worker']

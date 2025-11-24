@@ -1,0 +1,31 @@
+---
+- name: Get kernel version
+  command: uname -r
+  register: kernel_version_raw
+  changed_when: false
+
+- name: Set kernel_version fact
+  set_fact:
+    kernel_version: "{{ kernel_version_raw.stdout.split('-')[0] }}"
+
+- name: Fail if kernel version too old
+  fail:
+    msg: "Kernel {{ kernel_version }} is too old. Minimum required: {{ min_kernel_version }}"
+  when: kernel_version is version(min_kernel_version, '<')
+
+- name: Check required kernel config options
+  shell: |
+    missing_opts=()
+    for opt in {{ required_kernel_opts | join(' ') }}; do
+      grep -qE "^${opt}=(y|m)" /boot/config-{{ kernel_version_raw.stdout }} || missing_opts+=("$opt")
+    done
+    if [ ${#missing_opts[@]} -ne 0 ]; then
+      echo "Missing kernel config options: ${missing_opts[*]}"
+      exit 1
+    fi
+  register: check_opts
+  ignore_errors: false
+
+- name: Success message
+  debug:
+    msg: "✓ Kernel has all required configs for eBPF/Cilium"

@@ -1,0 +1,14 @@
+token: {{ token }}
+cni: {{ cni }}
+disable:
+{% for addon in disable_addons %}
+  - {{ addon }}
+{% endfor %}
+write-kubeconfig-mode: "{{ write_kubeconfig_mode }}"
+
+{% if tls_sans is defined and tls_sans | length > 0 %}
+tls-san:
+{% for san in tls_sans %}
+  - {{ san }}
+{% endfor %}
+{% endif %}

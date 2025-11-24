@@ -1,0 +1,68 @@
+---
+- name: Check if default route exists
+  ansible.builtin.command: ip route show default
+  register: default_route
+  changed_when: false
+  ignore_errors: true
+
+- name: Fail if no default route found
+  ansible.builtin.fail:
+    msg: >
+      Node {{ inventory_hostname }} does not have a default route.
+      RKE2 requires a default route for primary IP detection and ClusterIP routing.
+  when: default_route.stdout_lines | length == 0
+
+- name: Show default route
+  debug:
+    msg: "Default route exists: {{ default_route.stdout }}"
+  when: default_route.stdout_lines | length > 0
+#---------------SELINUX-------------------------
+- name: Check current SELinux status
+  ansible.builtin.command: getenforce
+  register: selinux_status
+  changed_when: false
+
+- name: Disable SELinux temporarily (runtime)
+  ansible.builtin.command: setenforce 0
+  when: selinux_status.stdout != "Disabled"
+
+- name: Disable SELinux permanently
+  ansible.builtin.lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=disabled'
+    backrefs: yes
+#---------------CONFIG_REGISTRY-------------------------
+- name: Ensure RKE2 config directory exists
+  file:
+    path: /etc/rancher/rke2
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Deploy registries.yaml from template
+  template:
+    src: registries.yaml.j2       # file trong templates/
+    dest: /etc/rancher/rke2/registries.yaml
+    mode: "0644"
+    owner: root
+    group: root
+#---------------CONFIG_CILIUM-------------------------
+- name: Ensure RKE2 server manifests directory exists
+  file:
+    path: /var/lib/rancher/rke2/server/manifests
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: inventory_hostname in groups['master']
+
+- name: Deploy rke2-cilium-config.yaml from template
+  template:
+    src: rke2-cilium-config.yaml.j2
+    dest: /var/lib/rancher/rke2/server/manifests/rke2-cilium-config.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when: inventory_hostname in groups['master']

@@ -1,0 +1,15 @@
+---
+# Danh sách image tarballs trên control node
+images_src_list:
+  - "/root/rke2-artifacts/rke2-images.linux-amd64.tar.zst"
+  - "/root/rke2-artifacts/custom-image1.tar.zst"
+  - "/root/rke2-artifacts/custom-image2.tar.zst"
+
+# Thư mục đích trên node
+images_dest_dir: "/var/lib/rancher/rke2/agent/images"
+
+# Quyền owner/group/mode
+images_owner: "root"
+images_group: "root"
+images_mode_dir: "0755"
+images_mode_file: "0644"

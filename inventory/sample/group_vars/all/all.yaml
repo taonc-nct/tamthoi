@@ -1,0 +1,47 @@
+loadbalancer_apiserver: 1.1.1.1
+loadbalancer_apiserver_port: 9345
+token: my-shared-secret
+tls_sans:
+  - "192.168.0.10"       # Master 1 IP
+  - "192.168.0.11"       # Master 2 IP
+  - "192.168.0.11"       # Master 3 IP
+  - "1.1.1.1"            # LB
+# Private registry URL
+private_registry_endpoint: "http://registry.local:5000"  # Lưu ý port nếu dùng HTTP
+
+# Sử dụng alias
+# private_registry_alias: "my-registry"
+# "my-registry":
+#   endpoint:
+#     - "http://registry.local:5000"
+
+# Registry HTTP → cần bỏ qua TLS
+private_registry_insecure: true
+
+# Chặn Docker Hub
+block_docker_hub: true
+
+# Nếu private registry cần auth
+private_registry_username: ""
+private_registry_password: ""
+
+# Cilium config
+k8s_service_host: 127.0.0.1
+k8s_service_port: 6443
+# Defaults: true
+# kubeProxyReplacement:
+# hubble_enabled:
+# hubble_relay_enabled:  
+# hubble_ui_enabled: 
+
+#RKE2 Config
+cni: cilium
+disable_addons:
+  - rke2-ingress-nginx
+  # - rke2-metrics-server
+  - rke2-kube-proxy
+  - rke2-runtimeclasses
+  - rke2-snapshot-controller
+  - rke2-snapshot-controller-crd
+write_kubeconfig_mode: "0644"
+node_role_label: 
