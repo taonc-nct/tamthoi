@@ -1,11 +1,19 @@
 mirrors:
   docker.io:
-    endpoint: []
+    endpoint: [] # Disable default Docker Hub
+  quay.io:
+    endpoint: [] # Disable Quay
+  registry.k8s.io:
+    endpoint: [] # Disable Kubernetes upstream registry
 
-
-mirrors:
-  docker.io:           # no default endpoint, pulls will fail if not available on a node
-  registry.k8s.io:     # no default endpoint, pulls will fail if not available on a node
-  mirror.example.com:  # explicit default endpoint, can pull from upstream if not available on a node
+  "{{ registry_ip }}:{{ registry_port }}":
     endpoint:
-      - https://mirror.example.com
+      - "https://{{ registry_ip }}:{{ registry_port }}"
+
+configs:
+  "{{ registry_ip }}:{{ registry_port }}":
+    tls:
+      insecure_skip_verify: {{ insecure|default(false) }}
+    auth:
+      username: {{ registry_username }}
+      password: {{ registry_password }}

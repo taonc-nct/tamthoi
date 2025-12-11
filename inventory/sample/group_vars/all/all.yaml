@@ -7,7 +7,8 @@ tls_sans:
   - "192.168.0.11"       # Master 3 IP
   - "1.1.1.1"            # LB
 # Private registry URL
-private_registry_endpoint: "http://registry.local:5000"  # Lưu ý port nếu dùng HTTP
+registry_ip: 1.1.1.1
+registry_port: 5000
 
 # Sử dụng alias
 # private_registry_alias: "my-registry"
@@ -24,7 +25,7 @@ block_docker_hub: true
 # Nếu private registry cần auth
 private_registry_username: ""
 private_registry_password: ""
-
+#------------------------------#
 # Cilium config
 k8s_service_host: 127.0.0.1
 k8s_service_port: 6443
